@@ -65,6 +65,14 @@ export interface ComponentOptionsBase<
   components?: Record<string, Component>
   directives?: Record<string, Directive>
   inheritAttrs?: boolean
+
+  // type-only differentiator to separate OptionWihtoutProps from a constructor
+  // type returned by createComponent() or FunctionalComponent
+  call?: never
+  // type-only differentiators for built-in Vnode types
+  __isFragment?: never
+  __isPortal?: never
+  __isSuspense?: never
 }
 
 export type ComponentOptionsWithoutProps<
@@ -75,7 +83,7 @@ export type ComponentOptionsWithoutProps<
   M extends MethodOptions = {}
 > = ComponentOptionsBase<Props, RawBindings, D, C, M> & {
   props?: undefined
-} & ThisType<ComponentPublicInstance<Props, RawBindings, D, C, M>>
+} & ThisType<ComponentPublicInstance<{}, RawBindings, D, C, M, Props>>
 
 export type ComponentOptionsWithArrayProps<
   PropNames extends string = string,
@@ -451,7 +459,7 @@ function createWatcher(
   ctx: ComponentPublicInstance,
   key: string
 ) {
-  const getter = () => ctx[key]
+  const getter = () => (ctx as Data)[key]
   if (isString(raw)) {
     const handler = renderContext[raw]
     if (isFunction(handler)) {

@@ -4,6 +4,7 @@
     "packages/*"
   ],
   "scripts": {
+      "sync": "git pull upstream master && git push",
     "dev": "node scripts/dev.js",
     "build": "node scripts/build.js",
     "size-runtime": "node scripts/build.js runtime-dom -p -f global",
@@ -11,7 +12,11 @@
     "size": "yarn size-runtime && yarn size-compiler",
     "lint": "prettier --write --parser typescript \"packages/**/*.ts?(x)\"",
     "test": "jest",
-    "sync": "git pull upstream master && git push"
+    "test-dts": "node scripts/build.js reactivity runtime-core runtime-dom -t -f esm && tsd"
+  },
+  "types": "test-dts/index.d.ts",
+  "tsd": {
+    "directory": "test-dts"
   },
   "gitHooks": {
     "pre-commit": "lint-staged",
@@ -46,7 +51,8 @@
     "rollup-plugin-terser": "^5.1.1",
     "rollup-plugin-typescript2": "^0.24.0",
     "ts-jest": "^24.0.2",
-    "typescript": "^3.5.3",
+    "tsd": "^0.10.0",
+    "typescript": "^3.7.0",
     "yorkie": "^2.0.0"
   }
 }

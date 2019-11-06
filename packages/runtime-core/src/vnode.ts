@@ -14,21 +14,26 @@ import {
 } from './component'
 import { RawSlots } from './componentSlots'
 import { ShapeFlags } from './shapeFlags'
-import { isReactive } from '@vue/reactivity'
+import { isReactive, Ref } from '@vue/reactivity'
 import { AppContext } from './apiApp'
-import { SuspenseBoundary, isSuspenseType } from './suspense'
+import { SuspenseBoundary } from './components/Suspense'
 import { DirectiveBinding } from './directives'
-import { SuspenseImpl } from './suspense'
+import { SuspenseImpl } from './components/Suspense'
 
-export const Fragment = Symbol(__DEV__ ? 'Fragment' : undefined)
-export const Portal = Symbol(__DEV__ ? 'Portal' : undefined)
+export const Fragment = (Symbol(__DEV__ ? 'Fragment' : undefined) as any) as {
+  __isFragment: true
+  new (): {
+    $props: VNodeProps
+  }
+}
+export const Portal = (Symbol(__DEV__ ? 'Portal' : undefined) as any) as {
+  __isPortal: true
+  new (): {
+    $props: VNodeProps & { target: string | object }
+  }
+}
 export const Text = Symbol(__DEV__ ? 'Text' : undefined)
 export const Comment = Symbol(__DEV__ ? 'Comment' : undefined)
-
-const Suspense = (__FEATURE_SUSPENSE__
-  ? SuspenseImpl
-  : null) as typeof SuspenseImpl
-export { Suspense }
 
 export type VNodeTypes =
   | string
@@ -38,6 +43,12 @@ export type VNodeTypes =
   | typeof Text
   | typeof Comment
   | typeof SuspenseImpl
+
+export interface VNodeProps {
+  [key: string]: any
+  key?: string | number
+  ref?: string | Ref | ((ref: object | null) => void)
+}
 
 type VNodeChildAtom<HostNode, HostElement> =
   | VNode<HostNode, HostElement>
@@ -66,7 +77,7 @@ export type NormalizedChildren<HostNode = any, HostElement = any> =
 export interface VNode<HostNode = any, HostElement = any> {
   _isVNode: true
   type: VNodeTypes
-  props: Record<any, any> | null
+  props: VNodeProps | null
   key: string | number | null
   ref: string | Function | null
   children: NormalizedChildren<HostNode, HostElement>
@@ -192,7 +203,7 @@ export function createVNode(
   // encode the vnode type information into a bitmap
   const shapeFlag = isString(type)
     ? ShapeFlags.ELEMENT
-    : __FEATURE_SUSPENSE__ && isSuspenseType(type)
+    : __FEATURE_SUSPENSE__ && (type as any).__isSuspense === true
       ? ShapeFlags.SUSPENSE
       : isObject(type)
         ? ShapeFlags.STATEFUL_COMPONENT

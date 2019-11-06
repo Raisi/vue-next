@@ -1,20 +1,28 @@
-import { VNode, normalizeVNode, VNodeChild, VNodeTypes } from './vnode'
-import { ShapeFlags } from './shapeFlags'
+import { VNode, normalizeVNode, VNodeChild } from '../vnode'
+import { ShapeFlags } from '../shapeFlags'
 import { isFunction, isArray } from '@vue/shared'
-import { ComponentInternalInstance, handleSetupResult } from './component'
-import { Slots } from './componentSlots'
-import { RendererInternals } from './createRenderer'
-import { queuePostFlushCb, queueJob } from './scheduler'
-import { updateHOCHostEl } from './componentRenderUtils'
-import { handleError, ErrorCodes } from './errorHandling'
-import { pushWarningContext, popWarningContext } from './warning'
+import { ComponentInternalInstance, handleSetupResult } from '../component'
+import { Slots } from '../componentSlots'
+import { RendererInternals } from '../renderer'
+import { queuePostFlushCb, queueJob } from '../scheduler'
+import { updateHOCHostEl } from '../componentRenderUtils'
+import { handleError, ErrorCodes } from '../errorHandling'
+import { pushWarningContext, popWarningContext } from '../warning'
 
-export function isSuspenseType(type: VNodeTypes): type is typeof SuspenseImpl {
-  return (type as any).__isSuspenseImpl === true
+export interface SuspenseProps {
+  onResolve?: () => void
+  onRecede?: () => void
 }
 
+// Suspense exposes a component-like API, and is treated like a component
+// in the compiler, but internally it's a special built-in type that hooks
+// directly into the renderer.
 export const SuspenseImpl = {
-  __isSuspenseImpl: true,
+  // In order to make Suspense tree-shakable, we need to avoid importing it
+  // directly in the renderer. The renderer checks for the __isSuspense flag
+  // on a vnode's type and calls the `process` method, passing in renderer
+  // internals.
+  __isSuspense: true,
   process(
     n1: VNode | null,
     n2: VNode,
@@ -51,6 +59,14 @@ export const SuspenseImpl = {
       )
     }
   }
+}
+
+// Force-casted public typing for h and TSX props inference
+export const Suspense = ((__FEATURE_SUSPENSE__
+  ? SuspenseImpl
+  : null) as any) as {
+  __isSuspense: true
+  new (): { $props: SuspenseProps }
 }
 
 function mountSuspense(

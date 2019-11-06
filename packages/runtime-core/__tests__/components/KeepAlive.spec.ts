@@ -1,4 +1,3 @@
-import { ComponentOptions } from '../src/component'
 import {
   h,
   TestElement,
@@ -7,9 +6,10 @@ import {
   ref,
   KeepAlive,
   serializeInner,
-  nextTick
+  nextTick,
+  ComponentOptions
 } from '@vue/runtime-test'
-import { KeepAliveProps } from '../src/keepAlive'
+import { KeepAliveProps } from '../../src/components/KeepAlive'
 
 describe('keep-alive', () => {
   let one: ComponentOptions
@@ -22,7 +22,7 @@ describe('keep-alive', () => {
     one = {
       name: 'one',
       data: () => ({ msg: 'one' }),
-      render() {
+      render(this: any) {
         return h('div', this.msg)
       },
       created: jest.fn(),
@@ -34,7 +34,7 @@ describe('keep-alive', () => {
     two = {
       name: 'two',
       data: () => ({ msg: 'two' }),
-      render() {
+      render(this: any) {
         return h('div', this.msg)
       },
       created: jest.fn(),
